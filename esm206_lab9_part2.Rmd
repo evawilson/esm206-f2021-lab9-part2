@@ -17,16 +17,19 @@ library(broom) # cleans up test outputs so we can include it in line in text
 ```
 
 ## Read in the data 
+
 ```{r}
 lizards <- read.csv(here("data", "lizards.csv"))
 ```
 
 ## Get counts of lizards by species
+
 ```{r}
 lizards %>% 
   count(spp) %>% 
   arrange(-n) # arrange the counts of lizard species in decreasing order 
 ```
+
 ## Make a subset 
 
 - UTST lizards
@@ -40,3 +43,53 @@ utst <- lizards %>%
   filter(tail %in% c("B", "W"))
 ```
 
+## Find counts and proportions of lizards with broken or whole tails at each site
+
+```{r}
+utst %>% 
+  count(site, tail)
+```
+
+Return counts in contingency formats for you. This is a way for audience to more quickly see the information that they need. 
+Show proportions directly 
+
+```{r}
+tail_counts <- utst %>% 
+  janitor::tabyl(site, tail)
+
+tail_proportions <- tail_counts %>% 
+  janitor::adorn_percentages() %>% # default is to calculate percentages by row 
+  janitor::adorn_pct_formatting(digits = 2) %>% 
+  janitor::adorn_ns()
+```
+
+Is there a significant association between site and tail breakage? Do we have enough evidence to reject the null hypothesis that tails are independent of site. 
+
+## Convert to a contigency table 
+
+Use `column_to_rowname()` to do that. 
+We want the sites to be designated rows, rather than values in cells. 
+
+```{r}
+lizard_ct <- tail_counts %>% 
+  column_to_rownames(var = "site")
+
+# Notice now we do not have three columns, we just have two. Site names are not stored as their own variable, they are now just rows. So, now we just have contingency table values.
+```
+
+## Chi-square
+Are tail breakage and site independent? If site had no association, then we would expect different proportions. Are these proportions at each site so different that we think we have enough evidence to reject null of independence, which would allow us to conclude there is a significant effect of site on tail breakage. 
+
+```{r}
+lizard_x2 <- chisq.test(lizard_ct)
+
+lizard_x2
+
+lizard_tidy <- broom::tidy(lizard_x2)
+```
+
+## ANALYSIS
+- Remember degrees of freedom for x2 = number of rows - 1 (plus more!! catch up)
+- The low p-value indicates that there IS a significant association between site and tail breakage. Put otherwise, site and lizard tail breakage are not independent. 
+
+There is a significant association (i.e. non-independence) between site and lizard tail breakage ($\chi$^2^(` r lizard_tidy$parameter`) = `r lizard_tidy$statistic`, *p* = ` r lizard_tidy$p.value`)

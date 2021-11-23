@@ -1,0 +1,42 @@
+---
+title: "Part 2: Chi-square with lizards tails"
+author: "Eva Wilson"
+date: "11/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Attach packages 
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom) # cleans up test outputs so we can include it in line in text
+```
+
+## Read in the data 
+```{r}
+lizards <- read.csv(here("data", "lizards.csv"))
+```
+
+## Get counts of lizards by species
+```{r}
+lizards %>% 
+  count(spp) %>% 
+  arrange(-n) # arrange the counts of lizard species in decreasing order 
+```
+## Make a subset 
+
+- UTST lizards
+- Sites: IBPE (enclosure grassland), RABB (rabbit mesquite site), "EAST" (east tarbush site)
+- Tail condition is recorded (W = whole, B = broken)
+
+```{r}
+utst <- lizards %>% 
+  filter(spp == "UTST") %>% 
+  filter(site %in% c("IBPE", "RABB", "EAST")) %>% 
+  filter(tail %in% c("B", "W"))
+```
+
